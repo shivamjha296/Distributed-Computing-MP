@@ -12,11 +12,11 @@ import { formatHexHash } from '../lib/hashAlgorithms';
 import {
   Sliders,
   Eye,
-  CheckCircle2,
-  Info,
   Server,
   Key,
   Compass,
+  CheckCircle,
+  HelpCircle,
 } from 'lucide-react';
 
 interface HashRingVisualizerProps {
@@ -53,11 +53,9 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
   const size = 520;
   const center = size / 2;
   const radius = 195;
-  const partitionInnerRadius = 180;
-  const partitionOuterRadius = 192;
+  const partitionInnerRadius = 182;
+  const partitionOuterRadius = 194;
 
-  // Converts polar coordinates (angle in degrees) to cartesian (x, y)
-  // 0 degrees is at the top (12 o'clock)
   const polarToCartesian = (centerX: number, centerY: number, r: number, angleInDegrees: number) => {
     const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
     return {
@@ -66,7 +64,6 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
     };
   };
 
-  // SVG Arc generator
   const describeArc = (x: number, y: number, rInner: number, rOuter: number, startAngle: number, endAngle: number) => {
     let diff = endAngle - startAngle;
     if (diff < 0) diff += 360;
@@ -89,103 +86,83 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sm:p-6 transition-all">
-      {/* Header & Controls bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-5 transition-all">
+      {/* Top Header & Slider */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2">
-            <Compass className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-base font-bold text-slate-900">
-              360° Consistent Hash Ring Visualizer
+            <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+              360° Consistent Hash Ring Topology
             </h2>
-            <span className="text-[11px] font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-              Hash Space: 0 → 2³²-1
+            <span className="text-[11px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium">
+              Range: 0 → 2³²-1
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Keys and server virtual nodes mapped uniformly onto a 32-bit circular continuum.
+            Keys and server tokens mapped deterministically onto a scalar circular continuum.
           </p>
         </div>
 
         {/* Dynamic VNodes slider control */}
-        <div className="flex flex-wrap items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
-          <div className="flex items-center gap-2">
-            <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-            <span className="text-xs font-semibold text-slate-700">Virtual Nodes / Node:</span>
-            <span className="w-6 text-center font-mono font-bold text-xs text-indigo-600 bg-white border border-indigo-200 rounded px-1">
-              {vnodesCount}
-            </span>
-          </div>
+        <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs">
+          <span className="font-medium text-slate-600">Virtual Nodes / Server:</span>
+          <span className="w-6 text-center font-mono font-bold text-slate-900 bg-white border border-slate-200 rounded px-1">
+            {vnodesCount}
+          </span>
           <input
             type="range"
             min="1"
             max="15"
             value={vnodesCount}
             onChange={(e) => onVNodesCountChange(Number(e.target.value))}
-            className="w-24 sm:w-32 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+            className="w-24 sm:w-28 h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-blue-600"
           />
-          <span className="text-[10px] text-slate-500 hidden sm:inline">
-            Total VNodes: <strong className="text-slate-800">{vnodes.length}</strong>
+          <span className="text-[11px] text-slate-500 font-mono">
+            ({vnodes.length} total)
           </span>
         </div>
       </div>
 
-      {/* Main Grid: SVG Canvas + Side Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 items-center">
+      {/* Main Grid: SVG Canvas + Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-5 items-center">
         {/* SVG Ring Column */}
         <div className="lg:col-span-8 flex flex-col items-center justify-center relative">
-          {/* Degree Markers Guide */}
-          <div className="relative w-full max-w-[520px] aspect-square flex items-center justify-center">
+          <div className="relative w-full max-w-[500px] aspect-square flex items-center justify-center">
             <svg
               viewBox={`0 0 ${size} ${size}`}
               className="w-full h-full select-none overflow-visible"
             >
-              <defs>
-                {/* Glow Filter for Active Key Pin */}
-                <filter id="activeGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <linearGradient id="ringTrackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#e2e8f0" />
-                  <stop offset="100%" stopColor="#cbd5e1" />
-                </linearGradient>
-              </defs>
-
-              {/* Base background ring circle */}
+              {/* Base background ring */}
               <circle
                 cx={center}
                 cy={center}
                 r={radius}
                 fill="none"
-                stroke="url(#ringTrackGrad)"
-                strokeWidth="2"
-                strokeDasharray="4 4"
+                stroke="#e2e8f0"
+                strokeWidth="1.5"
+                strokeDasharray="3 3"
               />
 
-              {/* Angle Tick Marks: 0, 90, 180, 270 */}
+              {/* Angle Tick Marks: 0, 45, 90, 135, 180, 225, 270, 315 */}
               {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
-                const inner = polarToCartesian(center, center, radius - 10, angle);
-                const outer = polarToCartesian(center, center, radius + 10, angle);
-                const label = polarToCartesian(center, center, radius + 22, angle);
+                const inner = polarToCartesian(center, center, radius - 8, angle);
+                const outer = polarToCartesian(center, center, radius + 8, angle);
+                const label = polarToCartesian(center, center, radius + 20, angle);
                 return (
-                  <g key={`tick-${angle}`} className="text-slate-400">
+                  <g key={`tick-${angle}`}>
                     <line
                       x1={inner.x}
                       y1={inner.y}
                       x2={outer.x}
                       y2={outer.y}
                       stroke="#94a3b8"
-                      strokeWidth={angle % 90 === 0 ? '2' : '1'}
+                      strokeWidth={angle % 90 === 0 ? '1.5' : '1'}
                       opacity={angle % 90 === 0 ? '0.8' : '0.4'}
                     />
                     {angle % 90 === 0 && (
                       <text
                         x={label.x}
-                        y={label.y + 4}
+                        y={label.y + 3.5}
                         fontSize="10"
                         fontFamily="monospace"
                         fontWeight="600"
@@ -199,7 +176,7 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                 );
               })}
 
-              {/* Partition Arcs (showing physical node coverage slices) */}
+              {/* Partition Arcs (showing physical node interval ownership) */}
               {showPartitions &&
                 partitions.map((part, idx) => {
                   const isNodeHighlighted =
@@ -217,13 +194,13 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                       key={`part-${idx}`}
                       d={arcPath}
                       fill={part.color}
-                      opacity={isNodeHighlighted ? 0.8 : 0.15}
-                      className="transition-opacity duration-200 hover:opacity-100 cursor-pointer"
+                      opacity={isNodeHighlighted ? 0.85 : 0.15}
+                      className="transition-opacity duration-150 cursor-pointer"
                     />
                   );
                 })}
 
-              {/* Virtual Nodes */}
+              {/* Virtual Nodes Pins */}
               {showVNodes &&
                 vnodes.map((vn) => {
                   const pos = polarToCartesian(center, center, radius, vn.angle);
@@ -236,7 +213,7 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                   return (
                     <g
                       key={`vn-${vn.id}`}
-                      className="cursor-pointer transition-all duration-200"
+                      className="cursor-pointer"
                       onMouseEnter={() => setHoveredVNode(vn)}
                       onMouseLeave={() => setHoveredVNode(null)}
                       onClick={() => parentNode && onSelectNode(parentNode)}
@@ -244,18 +221,17 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                       <circle
                         cx={pos.x}
                         cy={pos.y}
-                        r={isHovered ? 7 : 4.5}
-                        fill={isOffline ? '#94a3b8' : parentNode?.color || '#6366f1'}
+                        r={isHovered ? 6 : 4}
+                        fill={isOffline ? '#94a3b8' : parentNode?.color || '#2563eb'}
                         stroke="#ffffff"
-                        strokeWidth="2"
-                        opacity={isHighlighted ? 1 : 0.25}
-                        className="transition-all"
+                        strokeWidth="1.5"
+                        opacity={isHighlighted ? 1 : 0.2}
                       />
                     </g>
                   );
                 })}
 
-              {/* Stored Keys Pins */}
+              {/* Stored Keys Markers */}
               {showKeys &&
                 storedKeys.map((item, idx) => {
                   const angle = (item.keyHash / 0xffffffff) * 360;
@@ -270,32 +246,19 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                       onMouseEnter={() => setHoveredKey(item)}
                       onMouseLeave={() => setHoveredKey(null)}
                     >
-                      {isLastActive && (
-                        <circle
-                          cx={pos.x}
-                          cy={pos.y}
-                          r="14"
-                          fill="none"
-                          stroke="#ef4444"
-                          strokeWidth="2"
-                          className="animate-ping"
-                          opacity="0.6"
-                        />
-                      )}
                       <circle
                         cx={pos.x}
                         cy={pos.y}
-                        r={isHovered || isLastActive ? 6 : 3.5}
-                        fill={isLastActive ? '#ef4444' : '#0ea5e9'}
+                        r={isHovered || isLastActive ? 5.5 : 3.5}
+                        fill={isLastActive ? '#dc2626' : '#0284c7'}
                         stroke="#ffffff"
                         strokeWidth="1.5"
-                        filter={isLastActive ? 'url(#activeGlow)' : undefined}
                       />
                     </g>
                   );
                 })}
 
-              {/* Active Route Pulse Animation */}
+              {/* Active Route Connecting Line */}
               {lastOperation?.targetVNode && (
                 (() => {
                   const keyPos = polarToCartesian(center, center, radius - 24, lastOperation.angle);
@@ -307,23 +270,21 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                   );
                   return (
                     <g className="pointer-events-none">
-                      {/* Connecting Line from Key to Successor VNode */}
                       <line
                         x1={keyPos.x}
                         y1={keyPos.y}
                         x2={vnodePos.x}
                         y2={vnodePos.y}
-                        stroke="#ef4444"
-                        strokeWidth="2.5"
-                        strokeDasharray="4 3"
-                        className="animate-pulse"
+                        stroke="#dc2626"
+                        strokeWidth="2"
+                        strokeDasharray="3 3"
                       />
                     </g>
                   );
                 })()
               )}
 
-              {/* Center Hub */}
+              {/* Center Dashboard Hub */}
               <g
                 className="cursor-default"
                 transform={`translate(${center}, ${center})`}
@@ -331,11 +292,10 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                 <circle
                   cx="0"
                   cy="0"
-                  r="74"
+                  r="72"
                   fill="#ffffff"
                   stroke="#e2e8f0"
-                  strokeWidth="2"
-                  className="shadow-inner"
+                  strokeWidth="1.5"
                 />
                 <circle
                   cx="0"
@@ -345,40 +305,42 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                 />
                 <text
                   x="0"
-                  y="-22"
-                  fontSize="10"
+                  y="-20"
+                  fontSize="9"
                   fontWeight="600"
                   fill="#64748b"
                   textAnchor="middle"
+                  letterSpacing="0.05em"
                 >
                   CLUSTER BALANCE
                 </text>
                 <text
                   x="0"
                   y="6"
-                  fontSize="24"
-                  fontWeight="800"
-                  fill="#1e293b"
+                  fontSize="22"
+                  fontWeight="700"
+                  fill="#0f172a"
                   textAnchor="middle"
+                  fontFamily="monospace"
                 >
                   {uniformity.uniformityScore}%
                 </text>
                 <text
                   x="0"
-                  y="24"
+                  y="22"
                   fontSize="10"
                   fontWeight="600"
                   fill={uniformity.uniformityScore > 80 ? '#059669' : '#d97706'}
                   textAnchor="middle"
                 >
-                  {uniformity.uniformityScore > 80 ? '✓ Uniform Spread' : 'Moderate Skew'}
+                  {uniformity.uniformityScore > 80 ? 'Balanced Spread' : 'Moderate Skew'}
                 </text>
                 <text
                   x="0"
-                  y="40"
+                  y="38"
                   fontSize="9"
                   fontFamily="monospace"
-                  fill="#94a3b8"
+                  fill="#64748b"
                   textAnchor="middle"
                 >
                   StdDev: ±{uniformity.stdDev.toFixed(1)}%
@@ -388,23 +350,23 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
 
             {/* Hover Tooltip Overlay for VNode */}
             {hoveredVNode && (
-              <div className="absolute bottom-2 left-2 bg-slate-900/95 backdrop-blur-md text-white text-xs rounded-xl p-3 shadow-xl border border-slate-800 z-20 pointer-events-none max-w-xs animate-in fade-in">
-                <div className="flex items-center gap-1.5 font-bold text-indigo-300">
-                  <Server className="w-3.5 h-3.5" />
+              <div className="absolute bottom-2 left-2 bg-slate-900 text-white text-xs rounded-lg p-2.5 shadow-lg border border-slate-800 z-20 pointer-events-none max-w-xs">
+                <div className="flex items-center gap-1.5 font-bold text-slate-100">
+                  <Server className="w-3.5 h-3.5 text-blue-400" />
                   <span>Virtual Node: {hoveredVNode.id}</span>
                 </div>
-                <div className="mt-1 space-y-0.5 text-slate-300 text-[11px]">
+                <div className="mt-1 space-y-0.5 text-slate-300 text-[11px] font-mono">
                   <div>
-                    Physical Node:{' '}
-                    <strong className="text-white">
+                    Physical Server:{' '}
+                    <span className="text-white font-sans font-semibold">
                       {physicalNodes.find((n) => n.id === hoveredVNode.physicalNodeId)?.name}
-                    </strong>
+                    </span>
                   </div>
                   <div>
-                    Hash: <code className="text-amber-300">{formatHexHash(hoveredVNode.hash)}</code>
+                    Hash: <span className="text-amber-300">{formatHexHash(hoveredVNode.hash)}</span>
                   </div>
                   <div>
-                    Angle: <strong className="text-white">{hoveredVNode.angle.toFixed(2)}°</strong>
+                    Ring Angle: <span className="text-white">{hoveredVNode.angle.toFixed(2)}°</span>
                   </div>
                 </div>
               </div>
@@ -412,24 +374,24 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
 
             {/* Hover Tooltip Overlay for Key */}
             {hoveredKey && (
-              <div className="absolute top-2 right-2 bg-slate-900/95 backdrop-blur-md text-white text-xs rounded-xl p-3 shadow-xl border border-slate-800 z-20 pointer-events-none max-w-xs animate-in fade-in">
+              <div className="absolute top-2 right-2 bg-slate-900 text-white text-xs rounded-lg p-2.5 shadow-lg border border-slate-800 z-20 pointer-events-none max-w-xs">
                 <div className="flex items-center gap-1.5 font-bold text-sky-300">
-                  <Key className="w-3.5 h-3.5" />
-                  <span>Cached Key: {hoveredKey.key}</span>
+                  <Key className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Key: {hoveredKey.key}</span>
                 </div>
-                <div className="mt-1 space-y-0.5 text-slate-300 text-[11px]">
+                <div className="mt-1 space-y-0.5 text-slate-300 text-[11px] font-mono">
                   <div>
-                    Hash: <code className="text-sky-300">{formatHexHash(hoveredKey.keyHash)}</code>
+                    Hash: <span className="text-sky-300">{formatHexHash(hoveredKey.keyHash)}</span>
                   </div>
                   <div>
-                    Stored On:{' '}
-                    <strong className="text-white">
+                    Assigned:{' '}
+                    <span className="text-white font-sans font-semibold">
                       {physicalNodes.find((n) => n.id === hoveredKey.storedOnNodeId)?.name}
-                    </strong>
+                    </span>
                   </div>
                   {hoveredKey.expiresAt && (
-                    <div className="text-amber-300">
-                      Expires in: {Math.max(0, Math.round((hoveredKey.expiresAt - Date.now()) / 1000))}s
+                    <div className="text-amber-300 font-sans">
+                      TTL: {Math.max(0, Math.round((hoveredKey.expiresAt - Date.now()) / 1000))}s remaining
                     </div>
                   )}
                 </div>
@@ -438,12 +400,12 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
           </div>
 
           {/* Toggle Switches */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-2 pt-2 border-t border-slate-100 text-xs">
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-2 pt-3 border-t border-slate-100 text-xs">
             <button
               onClick={() => setShowVNodes(!showVNodes)}
-              className={`cursor-pointer px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+              className={`cursor-pointer px-2.5 py-1 rounded border text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
                 showVNodes
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  ? 'bg-slate-100 border-slate-300 text-slate-800'
                   : 'bg-white border-slate-200 text-slate-500'
               }`}
             >
@@ -452,9 +414,9 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
             </button>
             <button
               onClick={() => setShowPartitions(!showPartitions)}
-              className={`cursor-pointer px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+              className={`cursor-pointer px-2.5 py-1 rounded border text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
                 showPartitions
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  ? 'bg-slate-100 border-slate-300 text-slate-800'
                   : 'bg-white border-slate-200 text-slate-500'
               }`}
             >
@@ -463,32 +425,32 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
             </button>
             <button
               onClick={() => setShowKeys(!showKeys)}
-              className={`cursor-pointer px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
+              className={`cursor-pointer px-2.5 py-1 rounded border text-[11px] font-medium transition-colors flex items-center gap-1.5 ${
                 showKeys
-                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  ? 'bg-slate-100 border-slate-300 text-slate-800'
                   : 'bg-white border-slate-200 text-slate-500'
               }`}
             >
               <Eye className="w-3 h-3" />
-              Key Markers ({storedKeys.length})
+              Stored Keys ({storedKeys.length})
             </button>
           </div>
         </div>
 
-        {/* Side Panel: Physical Nodes Ring Share & Skew Analytics */}
-        <div className="lg:col-span-4 flex flex-col gap-4">
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
+        {/* Side Panel: Physical Nodes Partition Share */}
+        <div className="lg:col-span-4 flex flex-col gap-3">
+          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                <Server className="w-3.5 h-3.5 text-indigo-600" />
-                Physical Nodes Ring Share
+                <Server className="w-3.5 h-3.5 text-slate-500" />
+                Physical Server Partition Ownership
               </h3>
-              <span className="text-[10px] text-slate-500">
-                Ideal: {(100 / physicalNodes.length).toFixed(1)}% / node
+              <span className="text-[10px] text-slate-500 font-mono">
+                Target: {(100 / physicalNodes.length).toFixed(1)}% / server
               </span>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {shares.map((node) => {
                 const isHovered = highlightedNodeId === node.nodeId;
                 const isOffline = node.status === 'offline';
@@ -504,21 +466,21 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                     }}
                     className={`cursor-pointer p-2.5 rounded-lg border transition-all ${
                       isHovered
-                        ? 'bg-white border-indigo-300 shadow-sm ring-2 ring-indigo-50'
-                        : 'bg-white/70 border-slate-200/80 hover:bg-white'
+                        ? 'bg-white border-blue-400 shadow-xs'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs mb-1.5">
                       <div className="flex items-center gap-2">
                         <span
-                          className="w-3 h-3 rounded-full shrink-0 shadow-xs"
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
                           style={{ backgroundColor: node.color }}
                         />
                         <span className="font-semibold text-slate-800">
                           {node.nodeName}
                         </span>
                         {isOffline && (
-                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-700 border border-rose-200">
+                          <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200">
                             OFFLINE
                           </span>
                         )}
@@ -528,8 +490,7 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
                       </span>
                     </div>
 
-                    {/* Progress Bar of Hash Ring ownership */}
-                    <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-300"
                         style={{
@@ -545,16 +506,16 @@ export const HashRingVisualizer: React.FC<HashRingVisualizerProps> = ({
             </div>
           </div>
 
-          {/* Academic Insight Pill */}
-          <div className="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-xs text-indigo-950">
+          {/* Academic Context Box */}
+          <div className="p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-600">
             <div className="flex items-start gap-2">
-              <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+              <HelpCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
               <div>
-                <strong className="font-semibold block text-indigo-900">
-                  Why Virtual Nodes (VNodes)?
+                <strong className="font-semibold block text-slate-800 text-[11px]">
+                  Virtual Nodes Mechanism:
                 </strong>
-                <p className="mt-0.5 text-indigo-800 text-[11px] leading-relaxed">
-                  With 1 node per physical server, hash variance causes severe skew (hotspots). Adding virtual nodes breaks the hash space into fine interleaved intervals, driving uniformity towards the mathematical ideal.
+                <p className="mt-0.5 text-slate-600 text-[11px] leading-relaxed">
+                  Assigning multiple pseudo-tokens per physical machine interleaves intervals around the 360° perimeter. As V increases, the variance of ring partition coverage decreases according to Central Limit Theorem.
                 </p>
               </div>
             </div>

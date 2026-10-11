@@ -5,11 +5,10 @@ import {
   Server,
   Layers,
   Activity,
-  BarChart2,
-  BookOpen,
-  Zap,
-  ShieldCheck,
-  RefreshCw,
+  BarChart3,
+  FileText,
+  Terminal,
+  RotateCcw,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -34,82 +33,49 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenReport,
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
-      {/* Top Banner / Academic Metadata */}
-      <div className="bg-slate-900 text-white text-xs px-4 py-1.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-[10px]">
-            TOPIC #9
-          </span>
-          <span className="font-semibold text-slate-200">
-            Distributed Computing Micro-Project
-          </span>
-          <span className="hidden sm:inline text-slate-400">•</span>
-          <span className="hidden sm:inline text-slate-300">
-            Distributed Cache with Consistent Hashing
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-slate-300 text-[11px]">
-          <span className="hidden md:inline">
-            Batch: <strong className="text-white">D17B / D17C</strong>
-          </span>
-          <span className="hidden md:inline text-slate-500">•</span>
-          <span>
-            Lab Teacher: <strong className="text-white">Prof. Priti Joshi</strong>
-          </span>
-          <button
-            onClick={onOpenReport}
-            className="cursor-pointer ml-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-2 py-0.5 rounded text-[10px] transition-colors flex items-center gap-1 shadow-xs"
-          >
-            <BookOpen className="w-3 h-3" />
-            Project Report & Viva Guide
-          </button>
-        </div>
-      </div>
-
-      {/* Main Navbar Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-2xs">
+      {/* Main Navbar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
         {/* Brand */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
-            <Layers className="w-5 h-5 animate-pulse" />
+          <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+            <Layers className="w-4 h-4 text-blue-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg font-bold text-slate-900 tracking-tight">
-                DC-Cache<span className="text-indigo-600">Hub</span>
+              <h1 className="text-base font-bold text-slate-900 tracking-tight">
+                Distributed Cache Engine
               </h1>
-              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                Live Cluster
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Cluster Active
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Consistent Hashing Ring & Dynamo-Style Quorum
+              Consistent Hashing Ring • Virtual Nodes (VNodes) • Dynamo Quorum Replication
             </p>
           </div>
         </div>
 
-        {/* Live Cluster Quick Stats */}
-        <div className="hidden lg:flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-600">
+        {/* Live Cluster Metrics */}
+        <div className="hidden md:flex items-center gap-5 text-xs text-slate-600 border border-slate-200 bg-slate-50 rounded-lg px-3.5 py-1.5">
           <div className="flex items-center gap-1.5">
-            <Server className="w-3.5 h-3.5 text-indigo-600" />
+            <Server className="w-3.5 h-3.5 text-slate-500" />
             <span>Nodes:</span>
-            <strong className="text-slate-900">
-              {onlineNodeCount}/{totalNodeCount}
+            <strong className="text-slate-900 font-mono font-semibold">
+              {onlineNodeCount} / {totalNodeCount}
             </strong>
           </div>
-          <div className="w-px h-3.5 bg-slate-300" />
+          <div className="w-px h-3.5 bg-slate-200" />
           <div className="flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-amber-500" />
-            <span>Keys:</span>
-            <strong className="text-slate-900">{totalKeys}</strong>
+            <span className="text-slate-500">Keys:</span>
+            <strong className="text-slate-900 font-mono font-semibold">{totalKeys}</strong>
           </div>
-          <div className="w-px h-3.5 bg-slate-300" />
+          <div className="w-px h-3.5 bg-slate-200" />
           <div className="flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Hit Rate:</span>
-            <strong className="text-slate-900">{hitRatePercent}%</strong>
+            <Activity className="w-3.5 h-3.5 text-slate-500" />
+            <span>Hit Ratio:</span>
+            <strong className="text-slate-900 font-mono font-semibold">{hitRatePercent}%</strong>
           </div>
         </div>
 
@@ -117,23 +83,31 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={onResetCluster}
-            title="Reset cluster keys and statistics"
-            className="cursor-pointer p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5 text-xs font-medium"
+            title="Reset cluster state and preload default items"
+            className="cursor-pointer text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 font-medium"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset</span>
+            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+            <span>Reset</span>
+          </button>
+
+          <button
+            onClick={onOpenReport}
+            className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 shadow-2xs"
+          >
+            <FileText className="w-3.5 h-3.5 text-slate-300" />
+            <span>Architecture & Specs</span>
           </button>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 sm:gap-2 overflow-x-auto border-t border-slate-100 py-1 text-xs font-medium">
+      {/* Tabs */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-1 border-t border-slate-200 overflow-x-auto text-xs font-medium">
         <button
           onClick={() => setActiveTab('visualizer')}
-          className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`cursor-pointer px-4 py-2.5 border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'visualizer'
-              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'border-blue-600 text-blue-600 font-semibold bg-blue-50/20'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -142,62 +116,62 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         <button
           onClick={() => setActiveTab('nodes')}
-          className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`cursor-pointer px-4 py-2.5 border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'nodes'
-              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'border-blue-600 text-blue-600 font-semibold bg-blue-50/20'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Server className="w-3.5 h-3.5" />
-          Nodes & Storage ({onlineNodeCount})
+          Storage Nodes ({onlineNodeCount})
         </button>
 
         <button
           onClick={() => setActiveTab('console')}
-          className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`cursor-pointer px-4 py-2.5 border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'console'
-              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'border-blue-600 text-blue-600 font-semibold bg-blue-50/20'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          <Zap className="w-3.5 h-3.5" />
+          <Terminal className="w-3.5 h-3.5" />
           Query Console & Tracer
         </button>
 
         <button
           onClick={() => setActiveTab('benchmark')}
-          className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`cursor-pointer px-4 py-2.5 border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'benchmark'
-              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'border-blue-600 text-blue-600 font-semibold bg-blue-50/20'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          <BarChart2 className="w-3.5 h-3.5" />
+          <BarChart3 className="w-3.5 h-3.5" />
           Consistent vs Modulo Benchmark
         </button>
 
         <button
           onClick={() => setActiveTab('traffic')}
-          className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`cursor-pointer px-4 py-2.5 border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'traffic'
-              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'border-blue-600 text-blue-600 font-semibold bg-blue-50/20'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
-          Traffic Simulator (Zipfian)
+          Traffic Simulator
         </button>
 
         <button
           onClick={() => setActiveTab('report')}
-          className={`cursor-pointer px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap ${
+          className={`cursor-pointer px-4 py-2.5 border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
             activeTab === 'report'
-              ? 'bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200 shadow-xs'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'border-blue-600 text-blue-600 font-semibold bg-blue-50/20'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Academic Viva & Report
+          <FileText className="w-3.5 h-3.5" />
+          Evaluation Specs
         </button>
       </div>
     </header>

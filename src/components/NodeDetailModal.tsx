@@ -5,15 +5,10 @@ import { PhysicalNode, CacheItem } from '../lib/types';
 import { formatHexHash } from '../lib/hashAlgorithms';
 import {
   Server,
-  HardDrive,
-  Database,
   Trash2,
+  Database,
   Clock,
-  Zap,
-  Activity,
   Layers,
-  Shield,
-  Eye,
 } from 'lucide-react';
 
 interface NodeDetailModalProps {
@@ -41,29 +36,29 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-xl max-w-3xl w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in flex flex-col max-h-[88vh]">
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div className="flex items-center gap-2.5">
             <span
-              className="w-4 h-4 rounded-full shadow-xs"
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: node.color }}
             />
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-slate-900">{node.name}</h3>
+                <h3 className="text-sm font-bold text-slate-900">{node.name} Memory Table</h3>
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
                     node.status === 'offline'
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   }`}
                 >
                   {node.status.toUpperCase()}
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-mono">
-                {node.ip}:{node.port} • Eviction: {node.evictionPolicy} • Capacity: {items.length}/{node.memoryCapacity} Keys
+                {node.ip}:{node.port} • Policy: {node.evictionPolicy} • Capacity: {items.length} / {node.memoryCapacity} Keys
               </p>
             </div>
           </div>
@@ -71,10 +66,10 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onFlushNode(node.id)}
-              className="cursor-pointer text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5"
+              className="cursor-pointer text-xs font-medium text-rose-600 hover:bg-rose-50 border border-rose-200 px-2.5 py-1 rounded transition-colors flex items-center gap-1"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              Flush Cache
+              <Trash2 className="w-3 h-3" />
+              Flush Node
             </button>
             <button
               onClick={onClose}
@@ -85,102 +80,102 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-b border-slate-100 text-xs">
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-center">
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 py-3 border-b border-slate-200 text-xs">
+          <div className="bg-slate-50 p-2 rounded border border-slate-200 text-center">
             <span className="text-slate-400 block text-[10px]">Primary Keys</span>
-            <strong className="text-slate-900 font-bold text-sm">{primaryItems.length}</strong>
+            <strong className="text-slate-900 font-mono font-bold">{primaryItems.length}</strong>
           </div>
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-center">
+          <div className="bg-slate-50 p-2 rounded border border-slate-200 text-center">
             <span className="text-slate-400 block text-[10px]">Replicated Keys</span>
-            <strong className="text-amber-600 font-bold text-sm">{replicaItems.length}</strong>
+            <strong className="text-slate-900 font-mono font-bold">{replicaItems.length}</strong>
           </div>
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-center">
+          <div className="bg-slate-50 p-2 rounded border border-slate-200 text-center">
             <span className="text-slate-400 block text-[10px]">Hits / Misses</span>
-            <strong className="text-emerald-700 font-bold text-sm">
+            <strong className="text-slate-900 font-mono font-bold">
               {node.stats.hits} / {node.stats.misses}
             </strong>
           </div>
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 text-center">
-            <span className="text-slate-400 block text-[10px]">Evictions Triggered</span>
-            <strong className="text-rose-600 font-bold text-sm">{node.stats.evictions}</strong>
+          <div className="bg-slate-50 p-2 rounded border border-slate-200 text-center">
+            <span className="text-slate-400 block text-[10px]">Evictions</span>
+            <strong className="text-slate-900 font-mono font-bold">{node.stats.evictions}</strong>
           </div>
         </div>
 
         {/* Items List Table */}
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-1 overflow-y-auto py-3">
           {items.length === 0 ? (
-            <div className="text-center py-12 text-slate-400 text-xs">
-              <Database className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+            <div className="text-center py-10 text-slate-400 text-xs">
+              <Database className="w-6 h-6 mx-auto text-slate-300 mb-1" />
               This storage node is currently empty.
             </div>
           ) : (
-            <div className="border border-slate-200 rounded-2xl overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 border-b border-slate-200 font-bold text-slate-700">
+            <div className="border border-slate-200 rounded overflow-hidden">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-50 border-b border-slate-200 font-semibold text-slate-700 text-[11px]">
                   <tr>
-                    <th className="py-2.5 px-3">Key & Type</th>
-                    <th className="py-2.5 px-3">Cached Value</th>
-                    <th className="py-2.5 px-3">Hash (Hex)</th>
-                    <th className="py-2.5 px-3 text-center">Access Count (LFU)</th>
-                    <th className="py-2.5 px-3">TTL Remaining</th>
-                    <th className="py-2.5 px-3 text-right">Actions</th>
+                    <th className="py-2 px-3">Key</th>
+                    <th className="py-2 px-3">Payload</th>
+                    <th className="py-2 px-3">Hash (Hex)</th>
+                    <th className="py-2 px-3 text-center">Accesses (LFU)</th>
+                    <th className="py-2 px-3">TTL</th>
+                    <th className="py-2 px-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 text-[11px]">
                   {items.map((item) => {
                     const remainingSeconds = item.expiresAt
                       ? Math.max(0, Math.round((item.expiresAt - now) / 1000))
                       : null;
 
                     return (
-                      <tr key={item.key} className="hover:bg-slate-50/70">
-                        <td className="py-2.5 px-3">
+                      <tr key={item.key} className="hover:bg-slate-50">
+                        <td className="py-2 px-3">
                           <div className="flex items-center gap-1.5">
                             <span
-                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                              className={`text-[9px] font-bold px-1 py-0.2 rounded ${
                                 item.isReplica
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-indigo-100 text-indigo-800'
+                                  ? 'bg-slate-100 text-slate-700 border border-slate-200'
+                                  : 'bg-blue-50 text-blue-700 border border-blue-200'
                               }`}
                             >
                               {item.isReplica ? 'REPLICA' : 'PRIMARY'}
                             </span>
-                            <span className="font-mono font-semibold text-slate-900">
+                            <span className="font-semibold text-slate-900">
                               {item.key}
                             </span>
                           </div>
                         </td>
-                        <td className="py-2.5 px-3 max-w-[180px] truncate font-mono text-[11px] text-slate-600">
+                        <td className="py-2 px-3 max-w-[170px] truncate text-slate-600">
                           {item.value}
                         </td>
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-indigo-700">
+                        <td className="py-2 px-3 text-slate-600">
                           {formatHexHash(item.keyHash)}
                         </td>
-                        <td className="py-2.5 px-3 text-center font-bold font-mono text-slate-800">
+                        <td className="py-2 px-3 text-center font-bold text-slate-800">
                           {item.accessCount}
                         </td>
-                        <td className="py-2.5 px-3">
+                        <td className="py-2 px-3">
                           {remainingSeconds !== null ? (
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                              ⏱ {remainingSeconds}s
+                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                              {remainingSeconds}s
                             </span>
                           ) : (
-                            <span className="text-[10px] text-slate-400">∞ No Expiry</span>
+                            <span className="text-[10px] text-slate-400">∞</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-right space-x-1.5">
+                        <td className="py-2 px-3 text-right space-x-1 font-sans">
                           <button
                             onClick={() => onTouchItem(item.key)}
                             title="Touch key to test LRU/LFU update"
-                            className="cursor-pointer text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2 py-1 rounded-md transition-colors"
+                            className="cursor-pointer text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
                           >
                             Touch
                           </button>
                           <button
                             onClick={() => onDeleteItem(item.key)}
                             title="Delete Key"
-                            className="cursor-pointer text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-2 py-1 rounded-md transition-colors"
+                            className="cursor-pointer text-[10px] text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded transition-colors"
                           >
                             Delete
                           </button>
@@ -195,12 +190,12 @@ export const NodeDetailModal: React.FC<NodeDetailModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-100 flex justify-end">
+        <div className="pt-2.5 border-t border-slate-200 flex justify-end">
           <button
             onClick={onClose}
-            className="cursor-pointer px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors"
+            className="cursor-pointer px-3.5 py-1.5 bg-slate-900 text-white rounded text-xs font-medium hover:bg-slate-800 transition-colors"
           >
-            Close Inspector
+            Close
           </button>
         </div>
       </div>

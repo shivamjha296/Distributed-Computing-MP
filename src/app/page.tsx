@@ -23,16 +23,13 @@ import { ProjectReportModal } from '../components/ProjectReportModal';
 import {
   Server,
   Layers,
-  Zap,
   Activity,
-  BarChart2,
+  BarChart3,
   Clock,
   Compass,
   Database,
-  ShieldCheck,
-  CheckCircle2,
-  HardDrive,
-  RefreshCw,
+  Terminal,
+  CheckCircle,
 } from 'lucide-react';
 
 export default function Home() {
@@ -213,7 +210,7 @@ export default function Home() {
   const uniformity = cluster.getRing().getUniformityMetrics();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-800">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-slate-200">
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
@@ -233,29 +230,29 @@ export default function Home() {
       />
 
       {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full space-y-6 flex-1">
-        {/* KPI Summary Banner */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5 w-full space-y-5 flex-1">
+        {/* KPI Summary Tiles */}
         <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <Server className="w-3.5 h-3.5 text-indigo-600" />
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+              <Server className="w-3.5 h-3.5 text-slate-400" />
               Active Nodes
             </span>
-            <div className="text-xl font-extrabold text-slate-900 mt-1">
+            <div className="text-xl font-bold font-mono text-slate-900 mt-1">
               {onlineNodes.length}{' '}
               <span className="text-xs font-normal text-slate-400">/ {nodes.length}</span>
             </div>
-            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
-              ✓ Ring Operational
+            <span className="text-[10px] text-emerald-700 font-medium block mt-0.5">
+              Online & Routing
             </span>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <Compass className="w-3.5 h-3.5 text-violet-600" />
-              Virtual Nodes
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+              <Compass className="w-3.5 h-3.5 text-slate-400" />
+              Virtual Tokens
             </span>
-            <div className="text-xl font-extrabold text-slate-900 mt-1">
+            <div className="text-xl font-bold font-mono text-slate-900 mt-1">
               {cluster.getRing().getVirtualNodes().length}
             </div>
             <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
@@ -263,54 +260,54 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-sky-600" />
-              Unique Keys
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5 text-slate-400" />
+              Cached Items
             </span>
-            <div className="text-xl font-extrabold text-slate-900 mt-1">
+            <div className="text-xl font-bold font-mono text-slate-900 mt-1">
               {storedKeys.length}
             </div>
-            <span className="text-[10px] text-sky-700 font-semibold block mt-0.5">
+            <span className="text-[10px] text-slate-500 block mt-0.5">
               Dynamo Partitioned
             </span>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-emerald-600" />
-              Cache Hit Rate
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-slate-400" />
+              Cache Hit Ratio
             </span>
-            <div className="text-xl font-extrabold text-emerald-700 mt-1">
+            <div className="text-xl font-bold font-mono text-emerald-700 mt-1">
               {hitRatePercent}%
             </div>
-            <span className="text-[10px] text-slate-400 block mt-0.5">
-              {totalHits} hits / {totalMisses} misses
+            <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
+              {totalHits} hits / {totalMisses} miss
             </span>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
-              Avg Latency
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              Simulated Latency
             </span>
-            <div className="text-xl font-extrabold text-slate-900 mt-1 font-mono">
+            <div className="text-xl font-bold font-mono text-slate-900 mt-1">
               ~{cluster.getConfig().simulatedNetworkLatencyMs}ms
             </div>
             <span className="text-[10px] text-slate-400 block mt-0.5">
-              O(log M) binary search
+              O(log M) binary lookup
             </span>
           </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-              <BarChart2 className="w-3.5 h-3.5 text-indigo-600" />
-              Uniformity
+          <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-2xs">
+            <span className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
+              <BarChart3 className="w-3.5 h-3.5 text-slate-400" />
+              Partition Balance
             </span>
-            <div className="text-xl font-extrabold text-slate-900 mt-1">
+            <div className="text-xl font-bold font-mono text-slate-900 mt-1">
               {uniformity.uniformityScore}%
             </div>
-            <span className="text-[10px] text-indigo-600 font-semibold block mt-0.5">
+            <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
               StdDev: ±{uniformity.stdDev.toFixed(1)}%
             </span>
           </div>
@@ -318,7 +315,7 @@ export default function Home() {
 
         {/* Tab 1: 360 Hash Ring Visualizer */}
         {activeTab === 'visualizer' && (
-          <section className="space-y-6">
+          <section className="space-y-4">
             <HashRingVisualizer
               ring={cluster.getRing()}
               storedKeys={storedKeys}
@@ -328,20 +325,20 @@ export default function Home() {
               onSelectNode={(node) => setSelectedNodeForInspect(node)}
             />
 
-            {/* Quick Query Bar underneath Ring */}
-            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Quick Query Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
               <div className="space-y-0.5 text-center md:text-left">
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 justify-center md:justify-start">
-                  <Zap className="w-4 h-4 text-amber-500" />
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 justify-center md:justify-start">
+                  <Terminal className="w-3.5 h-3.5 text-slate-600" />
                   Quick Key Routing Tester
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Try querying any key to watch the pulse packet animate along the ring in real time.
+                  Execute sample queries to observe real-time clockwise traversal and successor server resolution.
                 </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                {['prod:macbook_pro_m3', 'cart:user_batch_d17', 'video:dc_lecture', 'flash_sale:deal_99'].map(
+                {['prod:macbook_pro_m3', 'cart:session_4812', 'video:intro_consistent_hash', 'flash_sale:deal_99'].map(
                   (testKey) => (
                     <button
                       key={testKey}
@@ -349,7 +346,7 @@ export default function Home() {
                         const res = handleGet(testKey);
                         setActiveTraceOperation(res);
                       }}
-                      className="cursor-pointer text-xs font-mono bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl font-medium transition-all shadow-2xs"
+                      className="cursor-pointer text-xs font-mono bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded transition-colors"
                     >
                       GET {testKey}
                     </button>
@@ -415,19 +412,15 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-slate-200 bg-white py-4 px-6 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="mt-auto border-t border-slate-200 bg-white py-3 px-6 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-800">DC-CacheHub</span>
+            <span className="font-semibold text-slate-800">Distributed Cache Engine</span>
             <span>•</span>
-            <span>Distributed Computing Micro-Project</span>
-            <span>•</span>
-            <span className="text-indigo-600 font-semibold">Topic #9: Consistent Hashing</span>
+            <span>Consistent Hashing Ring & Dynamo-Style Quorum Tier</span>
           </div>
-          <div className="flex items-center gap-3 text-slate-600">
-            <span>Guide: <strong>Prof. Priti Joshi</strong></span>
-            <span>•</span>
-            <span>VESIT Department of Computer Engineering</span>
+          <div className="text-slate-500 font-mono text-[11px]">
+            O(log M) Lookup • R-Way Replication • Multi-Policy Eviction
           </div>
         </div>
       </footer>

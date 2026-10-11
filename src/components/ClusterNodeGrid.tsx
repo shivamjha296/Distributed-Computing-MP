@@ -12,7 +12,6 @@ import {
   Layers,
   Settings,
   AlertTriangle,
-  Flame,
   CheckCircle,
 } from 'lucide-react';
 
@@ -52,7 +51,7 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
   const [newNodeVNodes, setNewNodeVNodes] = useState(5);
   const [newNodeCapacity, setNewNodeCapacity] = useState(12);
   const [newNodePolicy, setNewNodePolicy] = useState<EvictionPolicy>('LRU');
-  const [newNodeColor, setNewNodeColor] = useState('#0284c7');
+  const [newNodeColor, setNewNodeColor] = useState('#0891b2');
 
   const handleCreateNode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,11 +70,11 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
   return (
     <div className="space-y-4">
       {/* Top action row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
         <div>
-          <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-            <Server className="w-5 h-5 text-indigo-600" />
-            Distributed Storage Nodes ({nodes.filter((n) => n.status !== 'offline').length}/{nodes.length} Online)
+          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Server className="w-4 h-4 text-slate-700" />
+            Storage Node Topology ({nodes.filter((n) => n.status !== 'offline').length} of {nodes.length} Online)
           </h2>
           <p className="text-xs text-slate-500">
             Each server acts as an autonomous in-memory cache replica with configurable eviction policies and capacity.
@@ -89,10 +88,10 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
             setNewNodePort(8080 + nodes.length);
             setShowAddModal(true);
           }}
-          className="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-sm transition-all"
+          className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white font-medium px-3.5 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
         >
-          <Plus className="w-4 h-4" />
-          Add Storage Node
+          <Plus className="w-3.5 h-3.5" />
+          Provision Node
         </button>
       </div>
 
@@ -112,27 +111,27 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
           return (
             <div
               key={node.id}
-              className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between ${
+              className={`bg-white rounded-xl border transition-all flex flex-col justify-between ${
                 isOffline
-                  ? 'border-rose-200 bg-rose-50/20 opacity-80'
-                  : 'border-slate-200/90 hover:border-slate-300'
+                  ? 'border-rose-200 bg-rose-50/20'
+                  : 'border-slate-200 hover:border-slate-300 shadow-2xs'
               }`}
             >
               {/* Card Header */}
               <div className="p-4 border-b border-slate-100">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span
-                      className="w-3.5 h-3.5 rounded-full shrink-0 shadow-xs"
+                      className="w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ backgroundColor: node.color }}
                     />
                     <h3 className="font-bold text-slate-900 text-sm">{node.name}</h3>
                   </div>
 
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                    className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${
                       isOffline
-                        ? 'bg-rose-100 text-rose-700 border border-rose-200'
+                        ? 'bg-rose-50 text-rose-700 border border-rose-200'
                         : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     }`}
                   >
@@ -141,13 +140,13 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
                         isOffline ? 'bg-rose-500' : 'bg-emerald-500'
                       }`}
                     />
-                    {isOffline ? 'OFFLINE' : 'ONLINE'}
+                    {isOffline ? 'FAILED' : 'HEALTHY'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-slate-500 font-mono">
                   <span>{node.ip}:{node.port}</span>
-                  <span className="text-[11px] font-sans font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.2 rounded">
+                  <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
                     {share.toFixed(1)}% Ring
                   </span>
                 </div>
@@ -158,100 +157,88 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
                 {/* Memory Usage Bar */}
                 <div>
                   <div className="flex justify-between items-center mb-1 text-[11px]">
-                    <span className="text-slate-500 flex items-center gap-1 font-medium">
-                      <HardDrive className="w-3 h-3 text-slate-400" />
-                      Memory Store
-                    </span>
-                    <span className="font-bold text-slate-800">
+                    <span className="text-slate-500 font-medium">Memory Capacity</span>
+                    <span className="font-mono font-bold text-slate-800">
                       {items.length} / {node.memoryCapacity} Keys
                     </span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
                         usagePercent > 80
                           ? 'bg-rose-500'
                           : usagePercent > 50
                           ? 'bg-amber-500'
-                          : 'bg-emerald-500'
+                          : 'bg-emerald-600'
                       }`}
                       style={{ width: `${usagePercent}%` }}
                     />
                   </div>
                 </div>
 
-                {/* Badges: Primary vs Replicas, Policy */}
-                <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                {/* Primary vs Replica, Policy */}
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">
-                    <span className="text-slate-400 block text-[10px]">Primary / Replicas</span>
+                    <span className="text-slate-400 block text-[10px]">Primary / Replica</span>
                     <strong className="text-slate-800 font-mono">
                       {primaryCount} / {replicaCount}
                     </strong>
                   </div>
                   <div className="bg-slate-50 p-2 rounded-lg border border-slate-100 text-center">
-                    <span className="text-slate-400 block text-[10px]">Policy</span>
-                    <strong className="text-indigo-600 font-bold">
+                    <span className="text-slate-400 block text-[10px]">Eviction Policy</span>
+                    <strong className="text-slate-900 font-mono font-bold">
                       {node.evictionPolicy}
                     </strong>
                   </div>
                 </div>
 
                 {/* Hit Rate & Evictions */}
-                <div className="grid grid-cols-3 gap-1 pt-1 text-center text-[10px] text-slate-600">
-                  <div className="bg-emerald-50/50 p-1.5 rounded border border-emerald-100">
-                    <span className="text-slate-400 block">Hit Rate</span>
-                    <strong className="text-emerald-700 font-bold">{hitRate}%</strong>
+                <div className="grid grid-cols-3 gap-1 text-center text-[10px] text-slate-600">
+                  <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                    <span className="text-slate-400 block">Hit Ratio</span>
+                    <strong className="text-slate-800 font-mono font-bold">{hitRate}%</strong>
                   </div>
                   <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
                     <span className="text-slate-400 block">Hits</span>
-                    <strong className="text-slate-800 font-bold">{node.stats.hits}</strong>
+                    <strong className="text-slate-800 font-mono font-bold">{node.stats.hits}</strong>
                   </div>
-                  <div className="bg-amber-50/50 p-1.5 rounded border border-amber-100">
+                  <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
                     <span className="text-slate-400 block">Evicted</span>
-                    <strong className="text-amber-700 font-bold">{node.stats.evictions}</strong>
+                    <strong className="text-slate-800 font-mono font-bold">{node.stats.evictions}</strong>
                   </div>
                 </div>
               </div>
 
               {/* Action Buttons Footer */}
-              <div className="p-3 bg-slate-50/90 border-t border-slate-100 flex items-center justify-between gap-1.5">
+              <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-1.5">
                 <button
                   onClick={() => onInspectNode(node)}
-                  className="cursor-pointer flex-1 bg-white hover:bg-slate-100 text-slate-700 font-semibold py-1.5 px-2 rounded-lg border border-slate-200 text-xs transition-colors flex items-center justify-center gap-1 shadow-2xs"
+                  className="cursor-pointer flex-1 bg-white hover:bg-slate-100 text-slate-700 font-medium py-1.5 px-2 rounded border border-slate-200 text-xs transition-colors flex items-center justify-center gap-1 shadow-2xs"
                 >
-                  <Database className="w-3 h-3 text-indigo-600" />
+                  <Database className="w-3 h-3 text-slate-600" />
                   Inspect Keys
                 </button>
 
                 <button
                   onClick={() => onToggleNodeStatus(node.id)}
-                  title={isOffline ? 'Recover Node' : 'Simulate Crash'}
-                  className={`cursor-pointer p-1.5 rounded-lg border text-xs transition-colors ${
+                  title={isOffline ? 'Recover Server' : 'Simulate Failure / Crash'}
+                  className={`cursor-pointer px-2 py-1.5 rounded border text-xs font-medium transition-colors flex items-center gap-1 ${
                     isOffline
                       ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600'
-                      : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                      : 'bg-white hover:bg-rose-50 text-rose-600 border-rose-200'
                   }`}
                 >
                   <Power className="w-3.5 h-3.5" />
+                  <span>{isOffline ? 'Recover' : 'Fail'}</span>
                 </button>
 
                 <button
                   onClick={() => onFlushNode(node.id)}
-                  title="Flush Node Cache"
-                  className="cursor-pointer p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors text-xs"
+                  title="Flush Cache Store"
+                  className="cursor-pointer p-1.5 rounded border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors text-xs"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
-
-                {nodes.length > 2 && (
-                  <button
-                    onClick={() => onRemoveNode(node.id)}
-                    title="Decommission Node from Ring"
-                    className="cursor-pointer p-1.5 rounded-lg border border-rose-100 bg-white hover:bg-rose-50 text-rose-600 transition-colors text-xs"
-                  >
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                  </button>
-                )}
               </div>
             </div>
           );
@@ -261,11 +248,11 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
       {/* Add Storage Node Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Server className="w-5 h-5 text-indigo-600" />
-                Scale Cluster: Add Node
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 animate-in fade-in">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Server className="w-4 h-4 text-slate-700" />
+                Scale Cluster: Provision Storage Node
               </h3>
               <button
                 onClick={() => setShowAddModal(false)}
@@ -277,13 +264,13 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
 
             <form onSubmit={handleCreateNode} className="space-y-4 pt-4 text-xs">
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Node Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Node Identifier</label>
                 <input
                   type="text"
                   required
                   value={newNodeName}
                   onChange={(e) => setNewNodeName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
                 />
               </div>
 
@@ -295,7 +282,7 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
                     required
                     value={newNodeIp}
                     onChange={(e) => setNewNodeIp(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
                   />
                 </div>
                 <div>
@@ -305,32 +292,32 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
                     required
                     value={newNodePort}
                     onChange={(e) => setNewNodePort(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Virtual Nodes</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Virtual Nodes (VNodes)</label>
                   <input
                     type="number"
                     min="1"
                     max="20"
                     value={newNodeVNodes}
                     onChange={(e) => setNewNodeVNodes(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-semibold mb-1">Max Capacity (Keys)</label>
+                  <label className="block text-slate-700 font-semibold mb-1">Memory Capacity (Keys)</label>
                   <input
                     type="number"
                     min="5"
                     max="100"
                     value={newNodeCapacity}
                     onChange={(e) => setNewNodeCapacity(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold font-mono"
                   />
                 </div>
               </div>
@@ -341,7 +328,7 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
                   <select
                     value={newNodePolicy}
                     onChange={(e) => setNewNodePolicy(e.target.value as EvictionPolicy)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
                   >
                     <option value="LRU">LRU (Least Recently Used)</option>
                     <option value="LFU">LFU (Least Frequently Used)</option>
@@ -355,30 +342,30 @@ export const ClusterNodeGrid: React.FC<ClusterNodeGridProps> = ({
                       type="color"
                       value={newNodeColor}
                       onChange={(e) => setNewNodeColor(e.target.value)}
-                      className="w-10 h-9 p-0.5 border border-slate-300 rounded-lg cursor-pointer"
+                      className="w-8 h-7 p-0.5 border border-slate-300 rounded cursor-pointer"
                     />
                     <span className="font-mono text-slate-600">{newNodeColor}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
-                <strong>Dynamic Rebalancing Note:</strong> Adding this node will insert its virtual nodes onto the ring. Consistent hashing guarantees only ~1/(N+1) keys will migrate without affecting other servers!
+              <div className="p-3 bg-slate-50 rounded border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+                <strong>Dynamic Rebalancing Note:</strong> Adding this node inserts its virtual tokens onto the ring. Consistent hashing limits data migration strictly to adjacent arcs (~1/(N+1) keys).
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="cursor-pointer px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                  className="cursor-pointer px-3 py-1.5 text-slate-600 hover:bg-slate-100 rounded text-xs font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="cursor-pointer bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-lg shadow-sm transition-colors"
+                  className="cursor-pointer bg-slate-900 hover:bg-slate-800 text-white font-medium px-4 py-1.5 rounded text-xs shadow-2xs transition-colors"
                 >
-                  Deploy Node
+                  Provision Node
                 </button>
               </div>
             </form>

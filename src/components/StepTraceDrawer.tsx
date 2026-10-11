@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CacheOperationResult, RoutingTraceHop } from '../lib/types';
 import {
-  Zap,
+  Terminal,
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
@@ -11,8 +11,6 @@ import {
   Key,
   Compass,
   Clock,
-  Play,
-  RotateCcw,
 } from 'lucide-react';
 
 interface StepTraceDrawerProps {
@@ -35,28 +33,28 @@ export const StepTraceDrawer: React.FC<StepTraceDrawerProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-xl max-w-2xl w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in flex flex-col max-h-[88vh]">
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2">
               <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-md font-mono ${
+                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
                   operation.status.includes('HIT')
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                     : operation.status === 'MISS'
-                    ? 'bg-rose-100 text-rose-800'
-                    : 'bg-indigo-100 text-indigo-800'
+                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                    : 'bg-slate-100 text-slate-800 border border-slate-200'
                 }`}
               >
                 {operation.status}
               </span>
-              <h3 className="text-base font-bold text-slate-900">
-                Step-by-Step Routing Tracer: {operation.operation} "{operation.key}"
+              <h3 className="text-sm font-bold text-slate-900 font-mono">
+                {operation.operation} "{operation.key}"
               </h3>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Mathematical trace of client request resolution across the consistent hash ring.
+              Deterministic routing pipeline trace across the consistent hash ring topology.
             </p>
           </div>
 
@@ -68,9 +66,9 @@ export const StepTraceDrawer: React.FC<StepTraceDrawerProps> = ({
           </button>
         </div>
 
-        {/* Stepper Timeline Tracker */}
-        <div className="py-4 border-b border-slate-100">
-          <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
+        {/* Stepper Navigation */}
+        <div className="py-3 border-b border-slate-200">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium">
             {hops.map((hop, idx) => {
               const isSelected = idx === activeStepIdx;
               const isPassed = idx <= activeStepIdx;
@@ -79,17 +77,15 @@ export const StepTraceDrawer: React.FC<StepTraceDrawerProps> = ({
                 <button
                   key={idx}
                   onClick={() => setActiveStepIdx(idx)}
-                  className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                  className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors whitespace-nowrap text-xs ${
                     isSelected
-                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20'
+                      ? 'bg-slate-900 text-white font-semibold'
                       : isPassed
-                      ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                      : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                      ? 'bg-slate-100 text-slate-800 hover:bg-slate-200'
+                      : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-mono">
-                    {idx + 1}
-                  </span>
+                  <span className="font-mono text-[10px]">{idx + 1}.</span>
                   <span>{hop.title}</span>
                 </button>
               );
@@ -97,83 +93,82 @@ export const StepTraceDrawer: React.FC<StepTraceDrawerProps> = ({
           </div>
         </div>
 
-        {/* Current Hop Spotlight */}
-        <div className="py-6 flex-1 overflow-y-auto space-y-4">
-          <div className="bg-indigo-50/60 rounded-2xl p-5 border border-indigo-100 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-                Hop #{currentHop.step} of {hops.length}
+        {/* Hop Detail */}
+        <div className="py-4 flex-1 overflow-y-auto space-y-3.5">
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-mono font-bold text-slate-500 text-[11px] uppercase">
+                Step #{currentHop.step} of {hops.length}
               </span>
-              <span className="text-[11px] font-mono text-slate-500">
+              <span className="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">
                 Type: {currentHop.type}
               </span>
             </div>
 
-            <h4 className="text-base font-bold text-slate-900">
+            <h4 className="text-sm font-bold text-slate-900">
               {currentHop.title}
             </h4>
 
-            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+            <p className="text-xs text-slate-700 leading-relaxed font-sans">
               {currentHop.description}
             </p>
 
             {currentHop.detail && (
-              <div className="p-3 bg-white rounded-xl border border-indigo-200/80 font-mono text-xs text-indigo-950">
+              <div className="p-2.5 bg-white rounded border border-slate-200 font-mono text-xs text-slate-800">
                 {currentHop.detail}
               </div>
             )}
           </div>
 
-          {/* Academic Principle Context */}
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 text-xs text-slate-600 space-y-1">
-            <strong className="text-slate-800 block font-semibold">
-              Distributed System Mechanics:
+          <div className="p-3 bg-white rounded border border-slate-200 text-xs text-slate-600">
+            <strong className="text-slate-800 block text-xs mb-1 font-semibold">
+              Theoretical Invariant:
             </strong>
             {currentHop.type === 'hash' && (
-              <p>
-                Keys are hashed with 32-bit Murmur3 or FNV-1a to project strings evenly into a scalar ring integer space of [0, 4,294,967,295].
+              <p className="text-[11px] leading-relaxed">
+                Key string is projected into [0, 2³² - 1] hash space using Murmur3 to ensure uniform uniform pseudo-random dispersion.
               </p>
             )}
             {currentHop.type === 'ring-search' && (
-              <p>
-                The client coordinates with a sorted binary search tree (O(log M) complexity). The nearest clockwise virtual node is selected as the partition coordinator.
+              <p className="text-[11px] leading-relaxed">
+                Binary search over M sorted virtual nodes runs in O(log M) time to locate the immediate clockwise successor.
               </p>
             )}
             {currentHop.type === 'primary-route' && (
-              <p>
-                Network RPC/TCP socket dispatch to the physical IP address of the identified partition master.
+              <p className="text-[11px] leading-relaxed">
+                Direct RPC dispatch to the physical server IP hosting the resolved virtual node interval.
               </p>
             )}
             {currentHop.type === 'cache-lookup' && (
-              <p>
-                Server memory store lookup. If present, the entry recency/frequency counter is incremented. If full, cache eviction algorithm (LRU/LFU/FIFO) frees space.
+              <p className="text-[11px] leading-relaxed">
+                Local in-memory hash table lookup. Recency / frequency metadata updated for eviction scheduling.
               </p>
             )}
             {currentHop.type === 'replica-forward' && (
-              <p>
-                Dynamo-style asynchronous replication. To survive server crashes, the coordinator dispatches the write to the next distinct physical servers on the ring.
+              <p className="text-[11px] leading-relaxed">
+                Dynamo-style quorum replication: writes forward asynchronously to the next distinct physical machines clockwise.
               </p>
             )}
             {currentHop.type === 'failover' && (
-              <p>
-                Fault-tolerant self-healing. Because the primary node is detected offline, the client automatically falls back to replica nodes along the ring without dropping traffic.
+              <p className="text-[11px] leading-relaxed">
+                Primary node failure handled seamlessly by rerouting read request to the next live replica node along the ring.
               </p>
             )}
             {currentHop.type === 'completed' && (
-              <p>
-                Client receives acknowledgment with total end-to-end round trip latency.
+              <p className="text-[11px] leading-relaxed">
+                Round-trip transaction completed with client latency acknowledgment.
               </p>
             )}
           </div>
         </div>
 
-        {/* Drawer Footer Controls */}
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+        {/* Footer */}
+        <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveStepIdx(Math.max(0, activeStepIdx - 1))}
               disabled={activeStepIdx === 0}
-              className="cursor-pointer px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="cursor-pointer px-3 py-1 rounded border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors"
             >
               Previous
             </button>
@@ -182,17 +177,17 @@ export const StepTraceDrawer: React.FC<StepTraceDrawerProps> = ({
                 setActiveStepIdx(Math.min(hops.length - 1, activeStepIdx + 1))
               }
               disabled={activeStepIdx === hops.length - 1}
-              className="cursor-pointer px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-xs"
+              className="cursor-pointer px-3 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium disabled:opacity-40 transition-colors"
             >
-              Next Step
+              Next
             </button>
           </div>
 
           <button
             onClick={onClose}
-            className="cursor-pointer px-4 py-1.5 rounded-lg text-slate-600 hover:bg-slate-100 text-xs font-medium transition-colors"
+            className="cursor-pointer px-3 py-1 rounded text-slate-600 hover:bg-slate-100 text-xs font-medium transition-colors"
           >
-            Done
+            Close
           </button>
         </div>
       </div>

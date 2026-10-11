@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DC-CacheHub | Distributed Cache with Consistent Hashing (Topic #9)",
-  description: "Distributed Computing Micro-Project demonstrating Consistent Hashing Ring, Virtual Nodes, Dynamo-Style Quorum Replication, and Naive Modulo Benchmark.",
+  title: "Distributed Cache System | Consistent Hashing & Dynamo Ring Architecture",
+  description: "Enterprise Distributed In-Memory Cache with 360° Consistent Hashing Ring, Virtual Nodes, Dynamo Quorum Replication, and Naive Modulo Benchmark.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
