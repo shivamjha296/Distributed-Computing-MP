@@ -1,437 +1,345 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  CacheOperationResult,
-  HashAlgorithm,
-  WorkloadPreset,
-} from '../lib/types';
+import { CacheOperationResult, WorkloadPreset } from '../lib/types';
 import { WORKLOAD_PRESETS } from '../lib/presets';
 import { formatHexHash } from '../lib/hashAlgorithms';
-import {
-  Terminal,
-  Search,
-  Plus,
-  Trash2,
-  Clock,
-  Layers,
-  ArrowRight,
-  Shield,
-  Sliders,
-  CheckCircle2,
-  Copy,
-  Activity,
-} from 'lucide-react';
+import { Play, Database, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 
-interface InteractiveConsoleProps {
+interface OperationsProps {
   onGet: (key: string) => CacheOperationResult;
-  onSet: (key: string, value: string, ttl?: number) => CacheOperationResult;
+  onSet: (key: string, value: string) => CacheOperationResult;
   onDelete: (key: string) => CacheOperationResult;
-  onPopulatePreset: (preset: WorkloadPreset) => void;
-  lastOperation?: CacheOperationResult;
-  operationHistory: CacheOperationResult[];
-  replicationFactor: number;
-  onReplicationFactorChange: (r: number) => void;
-  hashAlgorithm: HashAlgorithm;
-  onHashAlgorithmChange: (algo: HashAlgorithm) => void;
-  onOpenStepTrace: (op: CacheOperationResult) => void;
+  onPreset: (preset: WorkloadPreset) => void;
+  lastOp?: CacheOperationResult;
+  history: CacheOperationResult[];
+  onShowTrace: (op: CacheOperationResult) => void;
 }
 
-export const InteractiveConsole: React.FC<InteractiveConsoleProps> = ({
+type Method = 'GET' | 'PUT' | 'DELETE' | 'PRESET';
+
+export const OperationsPanel: React.FC<OperationsProps> = ({
   onGet,
   onSet,
   onDelete,
-  onPopulatePreset,
-  lastOperation,
-  operationHistory,
-  replicationFactor,
-  onReplicationFactorChange,
-  hashAlgorithm,
-  onHashAlgorithmChange,
-  onOpenStepTrace,
+  onPreset,
+  lastOp,
+  history,
+  onShowTrace,
 }) => {
-  const [activeAction, setActiveAction] = useState<'GET' | 'SET' | 'DELETE' | 'PRESET'>('GET');
-  const [keyInput, setKeyInput] = useState('prod:macbook_pro_m3');
-  const [valueInput, setValueInput] = useState('{"name":"MacBook Pro M3","price":1999,"stock":14}');
-  const [ttlInput, setTtlInput] = useState<number>(60);
-  const [useTtl, setUseTtl] = useState(false);
+  const [method, setMethod] = useState<Method>('GET');
+  const [key, setKey] = useState('prod:macbook_pro_m3');
+  const [value, setValue] = useState('{"name":"MacBook Pro M3","price":1999,"stock":14}');
+
+  const sampleKeys = [
+    'prod:macbook_pro_m3',
+    'cart:session_4812',
+    'user:session_9901',
+    'flash_sale:deal_99',
+  ];
 
   const handleExecute = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!keyInput.trim()) return;
+    if (!key.trim()) return;
 
-    if (activeAction === 'GET') {
-      const res = onGet(keyInput.trim());
-      onOpenStepTrace(res);
-    } else if (activeAction === 'SET') {
-      const res = onSet(
-        keyInput.trim(),
-        valueInput.trim(),
-        useTtl ? ttlInput : undefined
-      );
-      onOpenStepTrace(res);
-    } else if (activeAction === 'DELETE') {
-      const res = onDelete(keyInput.trim());
-      onOpenStepTrace(res);
+    let res: CacheOperationResult;
+    if (method === 'GET') {
+      res = onGet(key.trim());
+    } else if (method === 'PUT') {
+      res = onSet(key.trim(), value.trim());
+    } else {
+      res = onDelete(key.trim());
     }
+    onShowTrace(res);
   };
 
-  const sampleKeyChips = [
-    'prod:macbook_pro_m3',
-    'prod:iphone_16_pro',
-    'cart:session_4812',
-    'user:session_9901',
-    'video:intro_consistent_hash',
-    'jwt:auth_token_98214',
-  ];
+  const getStatusBadge = (status: string) => {
+    if (status.includes('HIT')) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <CheckCircle2 size={12} />
+          200 OK • Cache Hit
+        </span>
+      );
+    }
+    if (status === 'MISS') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          <AlertCircle size={12} />
+          404 Not Found • Cache Miss
+        </span>
+      );
+    }
+    if (status === 'SET_OK') {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+          <CheckCircle2 size={12} />
+          201 Created • Item Stored
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+        200 OK • Item Deleted
+      </span>
+    );
+  };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-      {/* Query Console Form */}
-      <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-2xs p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Terminal className="w-4 h-4 text-slate-700" />
-              Client RPC Query Console
-            </h2>
-            <p className="text-xs text-slate-500">
-              Submit dynamic requests to observe hash resolution, routing, and replication across servers.
-            </p>
-          </div>
-
-          {/* Action Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-xs font-medium">
+    <div className="space-y-6">
+      {/* Main Execution Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Command Form */}
+        <div className="lg:col-span-7 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          {/* Method Selector Tabs - Clean, Modern Sans-Serif Buttons */}
+          <div className="flex items-center gap-2 p-3 border-b border-slate-100 bg-slate-50/70">
             <button
-              onClick={() => setActiveAction('GET')}
-              className={`cursor-pointer px-3 py-1 rounded transition-colors ${
-                activeAction === 'GET'
-                  ? 'bg-white text-slate-900 font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              type="button"
+              onClick={() => setMethod('GET')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                method === 'GET'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
               GET
             </button>
             <button
-              onClick={() => setActiveAction('SET')}
-              className={`cursor-pointer px-3 py-1 rounded transition-colors ${
-                activeAction === 'SET'
-                  ? 'bg-white text-slate-900 font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              type="button"
+              onClick={() => setMethod('PUT')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                method === 'PUT'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              SET
+              PUT
             </button>
             <button
-              onClick={() => setActiveAction('DELETE')}
-              className={`cursor-pointer px-3 py-1 rounded transition-colors ${
-                activeAction === 'DELETE'
-                  ? 'bg-white text-slate-900 font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              type="button"
+              onClick={() => setMethod('DELETE')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                method === 'DELETE'
+                  ? 'bg-rose-600 text-white shadow-xs'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              DEL
+              DELETE
             </button>
             <button
-              onClick={() => setActiveAction('PRESET')}
-              className={`cursor-pointer px-3 py-1 rounded transition-colors ${
-                activeAction === 'PRESET'
-                  ? 'bg-white text-slate-900 font-semibold shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900'
+              type="button"
+              onClick={() => setMethod('PRESET')}
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all cursor-pointer ${
+                method === 'PRESET'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              Presets
+              Load Workload
             </button>
           </div>
-        </div>
 
-        {/* Configuration Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1 text-[11px]">
-              Replication Factor (R)
-            </label>
-            <select
-              value={replicationFactor}
-              onChange={(e) => onReplicationFactorChange(Number(e.target.value))}
-              className="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-medium text-slate-800 text-xs focus:outline-none focus:border-slate-500"
-            >
-              <option value="1">R = 1 (Standalone)</option>
-              <option value="2">R = 2 (1 Primary + 1 Replica)</option>
-              <option value="3">R = 3 (1 Primary + 2 Replicas)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-slate-600 font-semibold mb-1 text-[11px]">
-              Hash Algorithm
-            </label>
-            <select
-              value={hashAlgorithm}
-              onChange={(e) => onHashAlgorithmChange(e.target.value as HashAlgorithm)}
-              className="w-full bg-white border border-slate-300 rounded px-2.5 py-1 font-medium text-slate-800 text-xs focus:outline-none focus:border-slate-500"
-            >
-              <option value="murmur3">Murmur3 (32-bit)</option>
-              <option value="fnv1a">FNV-1a (32-bit)</option>
-            </select>
-          </div>
-
-          <div className="col-span-2 sm:col-span-1 flex flex-col justify-end">
-            <span className="text-[10px] text-slate-500 block mb-1">Lookup Complexity</span>
-            <span className="font-mono text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded px-2 py-1 text-center">
-              O(log M) Binary Search
-            </span>
-          </div>
-        </div>
-
-        {/* PRESET tab */}
-        {activeAction === 'PRESET' ? (
-          <div className="space-y-3 pt-1">
-            <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Workload Datasets
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {WORKLOAD_PRESETS.map((preset) => (
-                <div
-                  key={preset.name}
-                  className="bg-white border border-slate-200 rounded-lg p-3.5 hover:border-slate-300 transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded inline-block mb-1">
-                      {preset.category}
-                    </span>
-                    <h4 className="font-bold text-slate-900 text-xs">{preset.name}</h4>
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
-                      {preset.description}
-                    </p>
+          <div className="p-6">
+            {method === 'PRESET' ? (
+              <div className="space-y-3">
+                <p className="text-xs text-slate-600 mb-2 font-medium">
+                  Select a production workload dataset to test cluster key distribution:
+                </p>
+                {WORKLOAD_PRESETS.map((preset) => (
+                  <div
+                    key={preset.name}
+                    className="p-4 border border-slate-200 rounded-xl flex items-center justify-between bg-white hover:border-blue-300 hover:bg-blue-50/20 transition-all shadow-2xs"
+                  >
+                    <div>
+                      <div className="font-bold text-xs text-slate-900">{preset.name}</div>
+                      <div className="text-xs text-slate-500 mt-0.5">
+                        {preset.sampleKeys.length} items • {preset.description}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onPreset(preset)}
+                      className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+                    >
+                      Load Dataset
+                    </button>
                   </div>
-                  <button
-                    onClick={() => onPopulatePreset(preset)}
-                    className="cursor-pointer mt-3 w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5"
-                  >
-                    <span>Load {preset.sampleKeys.length} Keys</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          /* Form for GET / SET / DELETE */
-          <form onSubmit={handleExecute} className="space-y-3.5 text-xs">
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label className="text-slate-700 font-semibold">Key</label>
-                <span className="text-[10px] text-slate-400 font-mono">string</span>
-              </div>
-              <input
-                type="text"
-                required
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                placeholder="e.g. prod:macbook_pro_m3"
-                className="w-full px-3 py-2 border border-slate-300 rounded font-mono text-xs focus:outline-none focus:border-slate-500 bg-white"
-              />
-
-              <div className="flex flex-wrap items-center gap-1 mt-2">
-                <span className="text-[10px] text-slate-400">Quick Test:</span>
-                {sampleKeyChips.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setKeyInput(chip)}
-                    className="cursor-pointer text-[10px] font-mono bg-slate-50 hover:bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 transition-colors"
-                  >
-                    {chip}
-                  </button>
                 ))}
               </div>
-            </div>
-
-            {activeAction === 'SET' && (
-              <div>
-                <label className="block text-slate-700 font-semibold mb-1">
-                  Value Payload
-                </label>
-                <textarea
-                  rows={2}
-                  required
-                  value={valueInput}
-                  onChange={(e) => setValueInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded font-mono text-xs focus:outline-none focus:border-slate-500 bg-white"
-                />
-              </div>
-            )}
-
-            {activeAction === 'SET' && (
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={useTtl}
-                      onChange={(e) => setUseTtl(e.target.checked)}
-                      className="rounded text-slate-900"
-                    />
-                    <span>Time-To-Live (TTL Expiry)</span>
-                  </label>
-                  {useTtl && (
-                    <span className="font-mono font-bold text-slate-800 bg-white border border-slate-200 rounded px-2 py-0.5">
-                      {ttlInput}s
-                    </span>
-                  )}
-                </div>
-
-                {useTtl && (
-                  <input
-                    type="range"
-                    min="5"
-                    max="180"
-                    step="5"
-                    value={ttlInput}
-                    onChange={(e) => setTtlInput(Number(e.target.value))}
-                    className="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-slate-800"
-                  />
-                )}
-              </div>
-            )}
-
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-[11px] text-slate-500 flex items-center gap-1 font-mono">
-                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                Network latency simulated: ~12ms
-              </span>
-
-              <button
-                type="submit"
-                className="cursor-pointer px-4 py-2 rounded bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs"
-              >
-                <span>Execute {activeAction}</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-
-      {/* Right Column: Execution Output */}
-      <div className="lg:col-span-5 flex flex-col gap-4">
-        {lastOperation ? (
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xs p-4 space-y-3.5">
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold ${
-                    lastOperation.status.includes('HIT')
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                      : lastOperation.status === 'MISS'
-                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                      : 'bg-slate-100 text-slate-800 border border-slate-200'
-                  }`}
-                >
-                  {lastOperation.status}
-                </span>
-                <span className="text-xs font-bold text-slate-900 font-mono">
-                  {lastOperation.operation} "{lastOperation.key}"
-                </span>
-              </div>
-              <span className="text-xs font-mono text-slate-500">
-                {lastOperation.latencyMs}ms
-              </span>
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded border border-slate-200 space-y-1.5 text-xs font-mono">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">Key Hash (Hex):</span>
-                <span className="font-bold text-slate-900">{formatHexHash(lastOperation.keyHash)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">Ring Coordinate:</span>
-                <span className="text-slate-800">{lastOperation.angle.toFixed(2)}°</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-500">Coordinator Server:</span>
-                <span className="font-bold text-slate-900">
-                  {lastOperation.primaryNode?.name} ({lastOperation.primaryNode?.ip})
-                </span>
-              </div>
-              {lastOperation.replicaNodes.length > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500">Replicas Synced:</span>
-                  <span className="text-slate-700">
-                    {lastOperation.replicaNodes.map((r) => r.name).join(', ')}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {lastOperation.value && (
-              <div className="p-2.5 bg-slate-50 rounded border border-slate-200 text-xs">
-                <span className="text-slate-500 font-mono text-[10px] block mb-1">Payload:</span>
-                <pre className="font-mono text-[11px] text-slate-800 overflow-x-auto whitespace-pre-wrap">
-                  {lastOperation.value}
-                </pre>
-              </div>
-            )}
-
-            <button
-              onClick={() => onOpenStepTrace(lastOperation)}
-              className="cursor-pointer w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium py-1.5 px-3 rounded text-xs transition-colors flex items-center justify-center gap-1.5 border border-slate-200"
-            >
-              <span>View Computational Trace ({lastOperation.traceHops.length} hops)</span>
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-slate-200 p-6 text-center text-slate-400 space-y-2">
-            <Terminal className="w-6 h-6 mx-auto text-slate-300" />
-            <h3 className="font-semibold text-slate-600 text-xs">No Queries Submitted</h3>
-            <p className="text-[11px] text-slate-400">
-              Execute a GET or SET query on the left to inspect routing.
-            </p>
-          </div>
-        )}
-
-        {/* Recent Access History */}
-        <div className="bg-white rounded-xl border border-slate-200 p-3.5 space-y-2">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
-            Recent RPC Transactions
-          </h3>
-
-          <div className="space-y-1 max-h-44 overflow-y-auto">
-            {operationHistory.length === 0 ? (
-              <p className="text-xs text-slate-400 text-center py-2">Empty log</p>
             ) : (
-              operationHistory.slice(0, 7).map((op, idx) => (
-                <div
-                  key={idx}
-                  onClick={() => onOpenStepTrace(op)}
-                  className="cursor-pointer p-2 rounded bg-slate-50 hover:bg-slate-100 border border-slate-100 transition-colors flex items-center justify-between text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded font-mono ${
-                        op.status.includes('HIT')
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : op.status === 'MISS'
-                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                          : 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      {op.status}
-                    </span>
-                    <span className="font-mono text-slate-800 font-medium truncate max-w-[120px]">
-                      {op.key}
-                    </span>
+              <form onSubmit={handleExecute} className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      Key Identifier
+                    </label>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <span>Quick picks:</span>
+                      {sampleKeys.map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => setKey(k)}
+                          className="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium cursor-pointer transition-colors"
+                        >
+                          {k.split(':')[0]}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-500 text-[11px] font-mono">
-                    <span>{op.primaryNode?.name}</span>
-                    <span>{op.latencyMs}ms</span>
-                  </div>
+                  <input
+                    value={key}
+                    onChange={(e) => setKey(e.target.value)}
+                    placeholder="e.g. user:session_101"
+                    required
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all"
+                  />
                 </div>
-              ))
+
+                {method === 'PUT' && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">
+                      Payload (JSON / String)
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={value}
+                      onChange={(e) => setValue(e.target.value)}
+                      required
+                      className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-none transition-all resize-none"
+                    />
+                  </div>
+                )}
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg cursor-pointer shadow-sm transition-all"
+                  >
+                    <Play size={13} />
+                    Execute {method} Request
+                  </button>
+                </div>
+              </form>
             )}
           </div>
         </div>
+
+        {/* Real-Time Response Inspector */}
+        <div className="lg:col-span-5 bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Response Inspector
+            </span>
+            {lastOp && getStatusBadge(lastOp.status)}
+          </div>
+
+          {lastOp ? (
+            <div className="p-5 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-slate-500 text-[11px] block font-medium">Target Node:</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">
+                    {lastOp.primaryNode?.name}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 text-[11px] block font-medium">Execution Latency:</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">
+                    {lastOp.latencyMs} ms
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 text-[11px] block font-medium">32-Bit Hash:</span>
+                  <span className="font-semibold text-slate-900 font-mono mt-0.5 block">
+                    {formatHexHash(lastOp.keyHash)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-500 text-[11px] block font-medium">Ring Angle:</span>
+                  <span className="font-bold text-slate-900 mt-0.5 block">
+                    {lastOp.angle.toFixed(1)}°
+                  </span>
+                </div>
+              </div>
+
+              {lastOp.value && (
+                <div>
+                  <span className="text-slate-600 font-semibold text-xs block mb-1.5">
+                    Payload Content:
+                  </span>
+                  <pre className="p-3 bg-slate-900 text-emerald-300 rounded-lg text-xs overflow-x-auto leading-relaxed border border-slate-800">
+                    {lastOp.value}
+                  </pre>
+                </div>
+              )}
+
+              <button
+                onClick={() => onShowTrace(lastOp)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer transition-colors shadow-2xs"
+              >
+                Inspect Routing Trace
+                <ChevronRight size={14} />
+              </button>
+            </div>
+          ) : (
+            <div className="p-10 text-center text-slate-400 text-xs font-medium">
+              Execute a GET, PUT, or DELETE request to view live routing metrics.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Execution Audit Log */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+            Request Execution History
+          </span>
+          <span className="text-xs font-medium text-slate-500">
+            {history.length} logged queries
+          </span>
+        </div>
+
+        {history.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-400 font-medium">
+            No queries executed yet.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50/60 border-b border-slate-200 text-slate-600 text-[11px] font-bold uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-5">Method</th>
+                  <th className="py-3 px-5">Key</th>
+                  <th className="py-3 px-5">Target Node</th>
+                  <th className="py-3 px-5">Hash</th>
+                  <th className="py-3 px-5">Status</th>
+                  <th className="py-3 px-5 text-right">Latency</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {history.slice(0, 10).map((op, idx) => (
+                  <tr
+                    key={idx}
+                    onClick={() => onShowTrace(op)}
+                    className="hover:bg-blue-50/30 cursor-pointer transition-colors"
+                  >
+                    <td className="py-3 px-5 font-bold text-slate-900">{op.operation}</td>
+                    <td className="py-3 px-5 font-medium text-slate-800">{op.key}</td>
+                    <td className="py-3 px-5 font-medium text-slate-600">{op.primaryNode?.name}</td>
+                    <td className="py-3 px-5 text-slate-500 font-mono text-[11px]">
+                      {formatHexHash(op.keyHash)}
+                    </td>
+                    <td className="py-3 px-5">{getStatusBadge(op.status)}</td>
+                    <td className="py-3 px-5 text-right font-semibold text-slate-700">
+                      {op.latencyMs}ms
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

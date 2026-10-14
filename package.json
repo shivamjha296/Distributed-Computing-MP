@@ -1,5 +1,5 @@
 {
-  "name": "distributed-cache",
+  "name": "cachering",
   "version": "0.1.0",
   "private": true,
   "scripts": {

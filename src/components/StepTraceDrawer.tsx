@@ -1,193 +1,148 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CacheOperationResult, RoutingTraceHop } from '../lib/types';
-import {
-  Terminal,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  Server,
-  Key,
-  Compass,
-  Clock,
-} from 'lucide-react';
+import { CacheOperationResult } from '../lib/types';
+import { formatHexHash } from '../lib/hashAlgorithms';
+import { X, ChevronLeft, ChevronRight, Activity, ArrowRight } from 'lucide-react';
 
-interface StepTraceDrawerProps {
-  operation: CacheOperationResult | null;
+interface Props {
+  operation: CacheOperationResult;
   onClose: () => void;
 }
 
-export const StepTraceDrawer: React.FC<StepTraceDrawerProps> = ({
-  operation,
-  onClose,
-}) => {
-  if (!operation) return null;
-
-  const [activeStepIdx, setActiveStepIdx] = useState<number>(
-    operation.traceHops.length - 1
-  );
-
+export const RoutingStepsModal: React.FC<Props> = ({ operation, onClose }) => {
   const hops = operation.traceHops;
-  const currentHop = hops[activeStepIdx] || hops[0];
+  const [step, setStep] = useState(0);
+  const hop = hops[step];
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-2xl w-full p-5 shadow-2xl border border-slate-200 animate-in fade-in flex flex-col max-h-[88vh]">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-          <div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
-                  operation.status.includes('HIT')
-                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    : operation.status === 'MISS'
-                    ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                    : 'bg-slate-100 text-slate-800 border border-slate-200'
-                }`}
-              >
-                {operation.status}
-              </span>
-              <h3 className="text-sm font-bold text-slate-900 font-mono">
-                {operation.operation} "{operation.key}"
-              </h3>
+      <div className="bg-white rounded-xl border border-slate-200 max-w-xl w-full shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+              <Activity size={16} />
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Deterministic routing pipeline trace across the consistent hash ring topology.
-            </p>
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              Routing Trace: {operation.operation} "{operation.key}"
+            </h3>
           </div>
-
           <button
             onClick={onClose}
-            className="cursor-pointer text-slate-400 hover:text-slate-600 font-bold p-1 text-sm"
+            className="text-slate-400 hover:text-slate-600 cursor-pointer p-1"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 
-        {/* Stepper Navigation */}
-        <div className="py-3 border-b border-slate-200">
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-medium">
-            {hops.map((hop, idx) => {
-              const isSelected = idx === activeStepIdx;
-              const isPassed = idx <= activeStepIdx;
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActiveStepIdx(idx)}
-                  className={`cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors whitespace-nowrap text-xs ${
-                    isSelected
-                      ? 'bg-slate-900 text-white font-semibold'
-                      : isPassed
-                      ? 'bg-slate-100 text-slate-800 hover:bg-slate-200'
-                      : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  <span className="font-mono text-[10px]">{idx + 1}.</span>
-                  <span>{hop.title}</span>
-                </button>
-              );
-            })}
+        {/* Trace Metadata Overview */}
+        <div className="px-6 py-3.5 border-b border-slate-100 grid grid-cols-4 gap-3 text-xs bg-white">
+          <div>
+            <span className="text-slate-400 block font-medium text-[11px]">Status</span>
+            <span className="font-bold text-slate-900">{operation.status}</span>
+          </div>
+          <div>
+            <span className="text-slate-400 block font-medium text-[11px]">Target Node</span>
+            <span className="font-bold text-slate-900">{operation.primaryNode?.name}</span>
+          </div>
+          <div>
+            <span className="text-slate-400 block font-medium text-[11px]">Murmur3 Hash</span>
+            <span className="font-semibold text-slate-900 font-mono text-[11px]">
+              {formatHexHash(operation.keyHash)}
+            </span>
+          </div>
+          <div>
+            <span className="text-slate-400 block font-medium text-[11px]">Latency</span>
+            <span className="font-bold text-slate-900">{operation.latencyMs}ms</span>
           </div>
         </div>
 
-        {/* Hop Detail */}
-        <div className="py-4 flex-1 overflow-y-auto space-y-3.5">
-          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-mono font-bold text-slate-500 text-[11px] uppercase">
-                Step #{currentHop.step} of {hops.length}
+        {/* Pipeline Step Indicator */}
+        <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2 overflow-x-auto">
+          {hops.map((h, i) => (
+            <button
+              key={i}
+              onClick={() => setStep(i)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors whitespace-nowrap ${
+                i === step
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-200/60'
+              }`}
+            >
+              <span>{i + 1}.</span>
+              <span>{h.title}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Step Detail */}
+        <div className="p-6 flex-1 overflow-y-auto space-y-4">
+          <div>
+            <div className="flex items-center gap-2.5 mb-2">
+              <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">
+                {step + 1}
               </span>
-              <span className="text-[11px] font-mono text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded">
-                Type: {currentHop.type}
-              </span>
+              <h4 className="text-sm font-bold text-slate-900">{hop.title}</h4>
             </div>
+            <p className="text-xs text-slate-600 font-medium leading-relaxed">{hop.description}</p>
+          </div>
 
-            <h4 className="text-sm font-bold text-slate-900">
-              {currentHop.title}
-            </h4>
+          {hop.detail && (
+            <div className="bg-slate-900 text-emerald-400 p-3.5 rounded-lg text-xs font-mono border border-slate-800 leading-relaxed">
+              {hop.detail}
+            </div>
+          )}
 
-            <p className="text-xs text-slate-700 leading-relaxed font-sans">
-              {currentHop.description}
-            </p>
-
-            {currentHop.detail && (
-              <div className="p-2.5 bg-white rounded border border-slate-200 font-mono text-xs text-slate-800">
-                {currentHop.detail}
+          {step === hops.length - 1 && (
+            <div className="border border-slate-200 rounded-xl p-4 bg-slate-50 text-xs space-y-1.5">
+              <div className="text-slate-500 font-bold text-[11px] uppercase tracking-wider mb-2">
+                Execution Summary
               </div>
-            )}
-          </div>
-
-          <div className="p-3 bg-white rounded border border-slate-200 text-xs text-slate-600">
-            <strong className="text-slate-800 block text-xs mb-1 font-semibold">
-              Theoretical Invariant:
-            </strong>
-            {currentHop.type === 'hash' && (
-              <p className="text-[11px] leading-relaxed">
-                Key string is projected into [0, 2³² - 1] hash space using Murmur3 to ensure uniform uniform pseudo-random dispersion.
-              </p>
-            )}
-            {currentHop.type === 'ring-search' && (
-              <p className="text-[11px] leading-relaxed">
-                Binary search over M sorted virtual nodes runs in O(log M) time to locate the immediate clockwise successor.
-              </p>
-            )}
-            {currentHop.type === 'primary-route' && (
-              <p className="text-[11px] leading-relaxed">
-                Direct RPC dispatch to the physical server IP hosting the resolved virtual node interval.
-              </p>
-            )}
-            {currentHop.type === 'cache-lookup' && (
-              <p className="text-[11px] leading-relaxed">
-                Local in-memory hash table lookup. Recency / frequency metadata updated for eviction scheduling.
-              </p>
-            )}
-            {currentHop.type === 'replica-forward' && (
-              <p className="text-[11px] leading-relaxed">
-                Dynamo-style quorum replication: writes forward asynchronously to the next distinct physical machines clockwise.
-              </p>
-            )}
-            {currentHop.type === 'failover' && (
-              <p className="text-[11px] leading-relaxed">
-                Primary node failure handled seamlessly by rerouting read request to the next live replica node along the ring.
-              </p>
-            )}
-            {currentHop.type === 'completed' && (
-              <p className="text-[11px] leading-relaxed">
-                Round-trip transaction completed with client latency acknowledgment.
-              </p>
-            )}
-          </div>
+              <div className="text-slate-700 font-medium">
+                Resolved Ring Coordinate:{' '}
+                <strong className="text-slate-900">{operation.angle.toFixed(2)}°</strong>
+              </div>
+              <div className="text-slate-700 font-medium">
+                Primary Host:{' '}
+                <strong className="text-slate-900">
+                  {operation.primaryNode?.name} ({operation.primaryNode?.ip}:{operation.primaryNode?.port})
+                </strong>
+              </div>
+              <div className="text-slate-700 font-medium">
+                Roundtrip Duration:{' '}
+                <strong className="text-slate-900">{operation.latencyMs} ms</strong>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
-        <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
+        {/* Footer Navigation */}
+        <div className="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setActiveStepIdx(Math.max(0, activeStepIdx - 1))}
-              disabled={activeStepIdx === 0}
-              className="cursor-pointer px-3 py-1 rounded border border-slate-300 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition-colors"
+              onClick={() => setStep(Math.max(0, step - 1))}
+              disabled={step === 0}
+              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
+              <ChevronLeft size={13} />
               Previous
             </button>
             <button
-              onClick={() =>
-                setActiveStepIdx(Math.min(hops.length - 1, activeStepIdx + 1))
-              }
-              disabled={activeStepIdx === hops.length - 1}
-              className="cursor-pointer px-3 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium disabled:opacity-40 transition-colors"
+              onClick={() => setStep(Math.min(hops.length - 1, step + 1))}
+              disabled={step === hops.length - 1}
+              className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
             >
               Next
+              <ChevronRight size={13} />
             </button>
           </div>
 
           <button
             onClick={onClose}
-            className="cursor-pointer px-3 py-1 rounded text-slate-600 hover:bg-slate-100 text-xs font-medium transition-colors"
+            className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold cursor-pointer transition-colors"
           >
-            Close
+            Done
           </button>
         </div>
       </div>
