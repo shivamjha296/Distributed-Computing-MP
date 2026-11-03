@@ -42,15 +42,15 @@ export const OperationsPanel: React.FC<OperationsProps> = ({
     e.preventDefault();
     if (!key.trim()) return;
 
-    let res: CacheOperationResult;
     if (method === 'GET') {
-      res = onGet(key.trim());
+      onGet(key.trim());
     } else if (method === 'PUT') {
-      res = onSet(key.trim(), value.trim());
+      onSet(key.trim(), value.trim());
     } else {
-      res = onDelete(key.trim());
+      onDelete(key.trim());
     }
-    onShowTrace(res);
+    // Note: Do not auto-open popup on execute.
+    // Popup opens only when user clicks an entry in the execution history or "Inspect Routing Trace".
   };
 
   const getStatusBadge = (status: string) => {
@@ -292,9 +292,14 @@ export const OperationsPanel: React.FC<OperationsProps> = ({
       {/* Execution Audit Log */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            Request Execution History
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Request Execution History
+            </span>
+            <span className="text-[11px] text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+              Click any row to open trace
+            </span>
+          </div>
           <span className="text-xs font-medium text-slate-500">
             {history.length} logged queries
           </span>
@@ -315,6 +320,7 @@ export const OperationsPanel: React.FC<OperationsProps> = ({
                   <th className="py-3 px-5">Hash</th>
                   <th className="py-3 px-5">Status</th>
                   <th className="py-3 px-5 text-right">Latency</th>
+                  <th className="py-3 px-4 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs">
@@ -322,7 +328,8 @@ export const OperationsPanel: React.FC<OperationsProps> = ({
                   <tr
                     key={idx}
                     onClick={() => onShowTrace(op)}
-                    className="hover:bg-blue-50/30 cursor-pointer transition-colors"
+                    title="Click to view detailed routing trace"
+                    className="hover:bg-blue-50/50 cursor-pointer transition-colors group"
                   >
                     <td className="py-3 px-5 font-bold text-slate-900">{op.operation}</td>
                     <td className="py-3 px-5 font-medium text-slate-800">{op.key}</td>
@@ -333,6 +340,12 @@ export const OperationsPanel: React.FC<OperationsProps> = ({
                     <td className="py-3 px-5">{getStatusBadge(op.status)}</td>
                     <td className="py-3 px-5 text-right font-semibold text-slate-700">
                       {op.latencyMs}ms
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 group-hover:text-blue-600 transition-colors">
+                        View Trace
+                        <ChevronRight size={13} />
+                      </span>
                     </td>
                   </tr>
                 ))}
